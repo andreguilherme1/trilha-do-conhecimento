@@ -31,15 +31,16 @@
     --font-body:'Work Sans', sans-serif;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0;height:100%;}
   body{
     font-family:var(--font-body);
     background:
       radial-gradient(ellipse 700px 500px at 50% -10%, #1c3013 0%, transparent 60%),
       linear-gradient(180deg,#080d06 0%, #0a1209 100%);
-    min-height:100vh;
+    min-height:100dvh;
     margin:0;
     padding:0;
+    padding-bottom:env(safe-area-inset-bottom);
     overflow:hidden;
     color:var(--parchment);
   }
@@ -47,7 +48,8 @@
   .screen-clip{
     position:relative;
     width:100vw;
-    height:100vh;
+    height:100dvh;
+    min-height:100dvh;
     overflow:hidden;
     background:var(--bg-1);
   }
@@ -55,6 +57,7 @@
   .screen{
     position:absolute; inset:0;
     display:flex; flex-direction:column;
+    min-height:0;
     opacity:1; visibility:visible;
     transition:opacity .25s ease;
     background:var(--bg-1);
@@ -407,6 +410,43 @@
 
   /* utility */
   .hidden-el{ display:none !important; }
+
+  @media (max-width:480px){
+    .topbar{ padding:12px 12px 8px; }
+    .topbar h1{ font-size:13px; }
+    .topbar .sub{ font-size:9.5px; }
+    .score-chip{ padding:5px 8px; font-size:11px; }
+    .icon-btn{ width:32px; height:32px; font-size:14px; }
+
+    .quiz-header{ padding:12px 14px 8px; }
+    .progress-row{ gap:8px; }
+    .progress-txt{ font-size:10px; }
+    .timer-wrap{ padding:6px 0 2px; }
+    .timer-ring{ width:64px; height:64px; }
+    .quiz-body{ padding:10px 14px 16px; }
+    .question-card{ padding:14px 12px; margin-bottom:12px; }
+    .question-card p{ font-size:14px; }
+    .option{ padding:11px 12px; font-size:13px; gap:8px; }
+    .option .letter{ width:22px; height:22px; font-size:11px; }
+
+    .center-screen{ padding:18px 16px 20px; gap:10px; justify-content:flex-start; }
+    .medal{ width:72px; height:72px; font-size:32px; }
+    .center-screen h2{ font-size:18px; }
+    .center-screen p.lead{ font-size:12px; max-width:240px; }
+    .stat-pill{ font-size:16px; padding:8px 12px; }
+    .btn{ padding:12px 16px; font-size:12px; max-width:240px; }
+
+    .ranking-header{ padding:14px 14px 10px; }
+    .ranking-list{ padding:6px 12px 16px; gap:8px; }
+    .rank-row{ padding:9px 10px; }
+    .rank-name{ font-size:12px; }
+  }
+
+  @media (max-height:760px){
+    .quiz-body{ padding-bottom:12px; }
+    .center-screen{ padding-top:14px; padding-bottom:14px; }
+  }
+
   ::-webkit-scrollbar{ width:0; height:0; }
 </style>
 </head>
@@ -662,10 +702,10 @@ const DOORS = [
 ];
 
 const MOCK_PLAYERS = [
-  {name:'André Guilherme', score:190},
-  {name:'Receba Martins', score:175},
+  {name:'André Guilherme', score:210},
   {name:'Marina Souza', score:160},
   {name:'Pedro Henrique', score:150},
+  {name:'Receba Martins', score:67},
   {name:'Júlia Fernandes', score:130},
   {name:'Rafael Costa', score:110},
   {name:'Camila Rocha', score:95},
