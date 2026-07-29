@@ -46,34 +46,5 @@
     </form>
     <div id="message" class="msg"></div>
     <a href="/" style="display:block; margin-top:12px; text-align:center; color:#d9b23c; text-decoration:none; font-size:14px;">Voltar para a trilha</a>
-
-      if (!name || !birth) {
-        message.textContent = 'Preencha todos os campos.';
-        message.className = 'msg err';
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/cadastrar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, birthDate: birth })
-        });
-        const text = await response.text();
-        const data = text ? JSON.parse(text) : {};
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Erro ao salvar');
-        }
-
-        message.textContent = data.message;
-        message.className = 'msg ok';
-        form.reset();
-      } catch (error) {
-        message.textContent = error.message;
-        message.className = 'msg err';
-      }
-    });
-  </script>
 </body>
 </html>
