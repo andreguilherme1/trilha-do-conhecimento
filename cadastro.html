@@ -59,9 +59,52 @@
       <input id="name" name="name" required />
       <label for="birth">Data de nascimento</label>
       <input id="birth" name="birth" type="date" required />
-      <button type="submit">Salvar cadastro</button>
+      <button onclick="cadastrar()" type="submit">Salvar cadastro</button>
     </form>
     <div id="message" class="msg"></div>
     <a href="/" style="display:block; margin-top:12px; text-align:center; color:#d9b23c; text-decoration:none; font-size:14px;">Voltar para a trilha</a>
+
+    <script>
+    const form = document.getElementById('form-cadastro');
+    const message = document.getElementById('message');
+
+    async function cadastrar(e) {
+      e.preventDefault();
+
+      console.log('Submit disparou');
+
+      const name = document.getElementById('name').value.trim();
+      const birthDate = document.getElementById('birth').value;
+
+      try {
+        const response = await fetch('/api/cadastrar', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name,
+            birthDate
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Erro ao cadastrar');
+        }
+
+        message.className = 'msg ok';
+        message.textContent = data.message;
+
+        form.reset();
+      } catch (err) {
+        message.className = 'msg err';
+        message.textContent = err.message;
+      }
+    }
+
+    form.addEventListener('submit', cadastrar);
+  </script>
 </body>
 </html>
