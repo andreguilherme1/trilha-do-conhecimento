@@ -73,6 +73,16 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(handle.read())
         return True
 
+    def do_HEAD(self):
+        parsed = urlparse(self.path)
+
+        if parsed.path in ("/", "", "/cadastrar", "/admin"):
+            self.send_response(200)
+        else:
+            self.send_response(404)
+
+        self.end_headers()
+
     def do_GET(self):
         parsed = urlparse(self.path)
         print('GET', parsed.path)
@@ -190,7 +200,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(b'{"ok": true}')
 
 
-if __name__ == '__main__':
-    server = ThreadingHTTPServer(('127.0.0.1', 8000), Handler)
-    print('Servidor ativo em http://127.0.0.1:8000')
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
+    print(f"Servidor iniciado na porta {port}")
     server.serve_forever()
