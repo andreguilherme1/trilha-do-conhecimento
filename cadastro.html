@@ -45,16 +45,7 @@
       <button type="submit">Salvar cadastro</button>
     </form>
     <div id="message" class="msg"></div>
-  </div>
-
-  <script>
-    const form = document.getElementById('form-cadastro');
-    const message = document.getElementById('message');
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const name = document.getElementById('name').value.trim();
-      const birth = document.getElementById('birth').value;
+    <a href="/" style="display:block; margin-top:12px; text-align:center; color:#d9b23c; text-decoration:none; font-size:14px;">Voltar para a trilha</a>
 
       if (!name || !birth) {
         message.textContent = 'Preencha todos os campos.';
@@ -68,7 +59,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, birthDate: birth })
         });
-        const data = await response.json();
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : {};
 
         if (!response.ok) {
           throw new Error(data.error || 'Erro ao salvar');

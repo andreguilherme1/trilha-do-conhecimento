@@ -1,22 +1,245 @@
 {
   "doors": [
     {
-      "subject": "Teste",
-      "title": "Demo",
+      "id": "mat",
+      "subject": "Química",
+      "title": "Laboratório dos Átomos",
+      "glyph": "⚛️",
       "questions": [
         {
-          "q": "Pergunta 1",
-          "correct": 0,
+          "q": "Qual é o número atômico do carbono?",
           "options": [
-            "A",
-            "B",
-            "C",
-            "D"
-          ]
+            "4",
+            "6",
+            "8",
+            "12"
+          ],
+          "correct": 1
+        },
+        {
+          "q": "Qual partícula possui carga elétrica negativa?",
+          "options": [
+            "Próton",
+            "Nêutron",
+            "Elétron",
+            "Núcleo"
+          ],
+          "correct": 2
+        },
+        {
+          "q": "Qual elemento químico possui o símbolo O?",
+          "options": [
+            "Ouro",
+            "Ósmio",
+            "Oxigênio",
+            "Oxalato"
+          ],
+          "correct": 2
+        },
+        {
+          "q": "O átomo é eletricamente neutro quando:",
+          "options": [
+            "Tem mais prótons que elétrons",
+            "Tem mais elétrons que prótons",
+            "Possui igual número de prótons e elétrons",
+            "Não possui nêutrons"
+          ],
+          "correct": 2
         }
-      ],
-      "id": "demo",
-      "glyph": "??"
+      ]
+    },
+    {
+      "id": "por",
+      "subject": "Química",
+      "title": "Castelo da Tabela Periódica",
+      "glyph": "🧪",
+      "questions": [
+        {
+          "q": "Qual grupo da Tabela Periódica é conhecido como gases nobres?",
+          "options": [
+            "Grupo 1",
+            "Grupo 2",
+            "Grupo 17",
+            "Grupo 18"
+          ],
+          "correct": 3
+        },
+        {
+          "q": "O sódio (Na) pertence à família dos:",
+          "options": [
+            "Halogênios",
+            "Metais alcalinos",
+            "Calcogênios",
+            "Gases nobres"
+          ],
+          "correct": 1
+        },
+        {
+          "q": "Qual elemento é um halogênio?",
+          "options": [
+            "Cloro",
+            "Magnésio",
+            "Cálcio",
+            "Hélio"
+          ],
+          "correct": 0
+        },
+        {
+          "q": "Qual é o símbolo químico do ferro?",
+          "options": [
+            "Fe",
+            "Fr",
+            "F",
+            "Ir"
+          ],
+          "correct": 0
+        }
+      ]
+    },
+    {
+      "id": "his",
+      "subject": "Química",
+      "title": "Caverna das Ligações",
+      "glyph": "🔗",
+      "questions": [
+        {
+          "q": "A ligação entre sódio (Na) e cloro (Cl) é do tipo:",
+          "options": [
+            "Metálica",
+            "Covalente",
+            "Iônica",
+            "Dipolo"
+          ],
+          "correct": 2
+        },
+        {
+          "q": "Na molécula de água (H₂O), a ligação entre H e O é:",
+          "options": [
+            "Iônica",
+            "Covalente",
+            "Metálica",
+            "Nuclear"
+          ],
+          "correct": 1
+        },
+        {
+          "q": "As ligações metálicas ocorrem principalmente entre:",
+          "options": [
+            "Metais",
+            "Ametais",
+            "Gases nobres",
+            "Hidrogênio e oxigênio"
+          ],
+          "correct": 0
+        },
+        {
+          "q": "Qual substância apresenta ligação predominantemente iônica?",
+          "options": [
+            "H₂O",
+            "CO₂",
+            "NaCl",
+            "O₂"
+          ],
+          "correct": 2
+        }
+      ]
+    },
+    {
+      "id": "geo",
+      "subject": "Química",
+      "title": "Fortaleza das Reações",
+      "glyph": "⚗️",
+      "questions": [
+        {
+          "q": "A combustão necessita obrigatoriamente de:",
+          "options": [
+            "Água",
+            "Oxigênio",
+            "Nitrogênio",
+            "Gás carbônico"
+          ],
+          "correct": 1
+        },
+        {
+          "q": "Quando um ferro enferruja, ocorre uma reação de:",
+          "options": [
+            "Neutralização",
+            "Oxidação",
+            "Fusão",
+            "Destilação"
+          ],
+          "correct": 1
+        },
+        {
+          "q": "Qual é um indício comum de reação química?",
+          "options": [
+            "Mudança de estado físico apenas",
+            "Formação de gás ou mudança de cor",
+            "Aumento do volume do recipiente",
+            "Diminuição da massa do átomo"
+          ],
+          "correct": 1
+        },
+        {
+          "q": "Em uma reação química, a soma das massas dos reagentes é:",
+          "options": [
+            "Maior que a dos produtos",
+            "Menor que a dos produtos",
+            "Igual à dos produtos",
+            "Sempre zero"
+          ],
+          "correct": 2
+        }
+      ]
+    },
+    {
+      "id": "cie",
+      "subject": "Química",
+      "title": "Templo da Química",
+      "glyph": "🧬",
+      "isFinal": true,
+      "questions": [
+        {
+          "q": "Qual é o pH aproximado de uma solução neutra a 25°C?",
+          "options": [
+            "1",
+            "5",
+            "7",
+            "14"
+          ],
+          "correct": 2
+        },
+        {
+          "q": "Qual substância é considerada um ácido?",
+          "options": [
+            "NaOH",
+            "HCl",
+            "NH₃",
+            "CaO"
+          ],
+          "correct": 1
+        },
+        {
+          "q": "Qual é a fórmula química da água?",
+          "options": [
+            "CO₂",
+            "H₂O",
+            "NaCl",
+            "O₂"
+          ],
+          "correct": 1
+        },
+        {
+          "q": "Uma base forte muito utilizada em laboratório é:",
+          "options": [
+            "H₂SO₄",
+            "HCl",
+            "NaOH",
+            "H₂CO₃"
+          ],
+          "correct": 2
+        }
+      ]
     }
   ]
 }

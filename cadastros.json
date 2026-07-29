@@ -1,3 +1,8 @@
 {
-  "pessoas": []
+  "pessoas": [
+    {
+      "name": "André",
+      "birthDate": "2003-02-21"
+    }
+  ]
 }

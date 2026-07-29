@@ -69,7 +69,17 @@
       gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--panel-2);
     }
     .pill { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
-    .footer-link { margin-top: 12px; display: inline-block; color: var(--gold); }
+    .tiny-link {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 11px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      opacity: .8;
+    }
+    .tiny-link:hover { color: var(--gold); opacity: 1; }
     @media (max-width: 760px) {
       .grid.two { grid-template-columns: 1fr; }
       body { padding: 16px; }
@@ -124,7 +134,10 @@
         <div id="cadastros-message" class="message"></div>
       </div>
 
-      <a class="footer-link" href="/">Voltar para a trilha</a>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <a class="tiny-link" href="/">Voltar para a trilha</a>
+        <a class="tiny-link" href="/cadastrar">Ir para cadastro</a>
+      </div>
     </div>
   </div>
 
@@ -263,7 +276,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(parsed)
         });
-        const data = await response.json();
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : {};
         if (!response.ok) throw new Error(data.error || 'Falha ao salvar');
         setMessage(message, data.message || 'Perguntas salvas com sucesso.', 'ok');
       } catch (error) {
@@ -280,7 +294,8 @@
       const message = document.getElementById('cadastros-message');
       try {
         const response = await fetch('/api/admin/clear-cadastros', { method: 'POST' });
-        const data = await response.json();
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : {};
         if (!response.ok) throw new Error(data.error || 'Falha ao limpar');
         renderCadastros([]);
         setMessage(message, data.message || 'Cadastros e ranking limpos.', 'ok');

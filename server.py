@@ -4,6 +4,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
 
+def _json_bytes(payload):
+    return json.dumps(payload, ensure_ascii=False).encode('utf-8')
+
+
 def load_cadastros():
     if not os.path.exists(DATA_FILE):
         return []
@@ -36,6 +40,14 @@ QUIZ_FILE = os.path.join(ROOT, 'quiz-data.json')
 
 
 class Handler(BaseHTTPRequestHandler):
+    def _send_json(self, payload, status=200):
+        body = _json_bytes(payload)
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def _send_file(self, path):
         if not os.path.exists(path) or os.path.isdir(path):
             self.send_response(404)
@@ -101,37 +113,25 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         parsed = urlparse(self.path)
         if parsed.path == '/api/admin/save-quiz-data':
-            length = int(self.headers.get('Content-Length', '0'))
+            length = int(self.headers.get('Content-Length', '0') or '0')
             body = self.rfile.read(length).decode('utf-8')
             try:
                 payload = json.loads(body)
             except json.JSONDecodeError:
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json; charset=utf-8')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'JSON inválido'}).encode('utf-8'))
+                self._send_json({'error': 'JSON inválido'}, 400)
                 return
 
             if not payload.get('doors'):
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json; charset=utf-8')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Formato inválido. Envie um JSON com o campo doors.'}).encode('utf-8'))
+                self._send_json({'error': 'Formato inválido. Envie um JSON com o campo doors.'}, 400)
                 return
 
             save_quiz_data(payload)
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(json.dumps({'message': 'Perguntas salvas com sucesso'}).encode('utf-8'))
+            self._send_json({'message': 'Perguntas salvas com sucesso'})
             return
 
         if parsed.path == '/api/admin/clear-cadastros':
             save_cadastros([])
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(json.dumps({'message': 'Cadastros e ranking limpos com sucesso'}).encode('utf-8'))
+            self._send_json({'message': 'Cadastros e ranking limpos com sucesso'})
             return
 
         if parsed.path != '/api/cadastrar':
@@ -139,43 +139,31 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
-        length = int(self.headers.get('Content-Length', '0'))
+        length = int(self.headers.get('Content-Length', '0') or '0')
         body = self.rfile.read(length).decode('utf-8')
 
         try:
             payload = json.loads(body)
         except json.JSONDecodeError:
-            self.send_response(400)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'JSON inválido'}).encode('utf-8'))
+            self._send_json({'error': 'JSON inválido'}, 400)
             return
 
         name = (payload.get('name') or '').strip()
         birth_date = (payload.get('birthDate') or '').strip()
         if not name or not birth_date:
-            self.send_response(400)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Nome e data de nascimento são obrigatórios'}).encode('utf-8'))
+            self._send_json({'error': 'Nome e data de nascimento são obrigatórios'}, 400)
             return
 
         entries = load_cadastros()
         duplicate = any(entry.get('name', '').lower() == name.lower() and entry.get('birthDate') == birth_date for entry in entries)
         if duplicate:
-            self.send_response(409)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Este cadastro já existe'}).encode('utf-8'))
+            self._send_json({'error': 'Este cadastro já existe'}, 409)
             return
 
         entries.append({'name': name, 'birthDate': birth_date})
         save_cadastros(entries)
 
-        self.send_response(201)
-        self.send_header('Content-Type', 'application/json; charset=utf-8')
-        self.end_headers()
-        self.wfile.write(json.dumps({'message': 'Cadastro realizado com sucesso'}).encode('utf-8'))
+        self._send_json({'message': 'Cadastro realizado com sucesso'}, 201)
 
     def do_PUT(self):
         parsed = urlparse(self.path)
