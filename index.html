@@ -356,6 +356,19 @@
   }
   .btn-row{ display:flex; flex-direction:column; gap:10px; width:100%; align-items:center; margin-top:6px; }
 
+  .start-card{
+    width:100%; max-width:320px; display:flex; flex-direction:column; gap:12px;
+    background:rgba(0,0,0,.24); border:1px solid rgba(217,178,60,.24);
+    border-radius:16px; padding:16px; box-shadow:0 10px 24px rgba(0,0,0,.28);
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; text-align:left; }
+  .field span{ font-size:11px; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:.08em; }
+  .field input{
+    border:none; border-radius:10px; padding:12px 13px; font-size:14px; color:#111;
+    background:var(--parchment); outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+  .field input:focus{ box-shadow:inset 0 0 0 2px rgba(217,178,60,.45); }
+
   .breakdown{
     width:100%; margin-top:6px; display:flex; flex-direction:column; gap:8px;
     text-align:left;
@@ -403,6 +416,7 @@
   }
   .rank-name{ flex:1; font-size:13px; color:var(--parchment); font-weight:500; }
   .rank-row.me .rank-name{ color:var(--gold-hi); font-weight:700; }
+  .rank-meta{ display:block; font-size:10px; color:var(--parchment-dim); margin-top:2px; }
   .rank-score{ font-family:var(--font-display); font-weight:700; font-size:13px; color:var(--gold-hi); }
   .close-ranking{
     flex:0 0 auto; padding:12px 18px 18px; display:flex; justify-content:center;
@@ -454,8 +468,29 @@
 
 <div class="screen-clip">
 
+    <!-- ============ START SCREEN ============ -->
+    <div id="screen-start" class="screen">
+      <div class="center-screen">
+        <div class="medal">🗺️</div>
+        <h2>Bem-vindo à Expedição do Saber</h2>
+        <p class="lead">Digite seu nome e sua data de nascimento para registrar a sua jornada no ranking.</p>
+        <form id="start-form" class="start-card" onsubmit="event.preventDefault(); startGame();">
+          <label class="field">
+            <span>Nome</span>
+            <input id="player-name" type="text" placeholder="Digite seu nome" required maxlength="40">
+          </label>
+          <label class="field">
+            <span>Data de nascimento</span>
+            <input id="player-birth" type="date" required>
+          </label>
+          <button type="submit" class="btn btn-primary" style="margin-left: 10px;">Começar trilha</button>
+        </form>
+        <a href="/admin" class="btn btn-secondary" style="text-decoration:none; text-align:center; display:inline-block; margin-top:4px;">Painel admin</a>
+      </div>
+    </div>
+
     <!-- ============ TRAIL SCREEN ============ -->
-    <div id="screen-trail" class="screen">
+    <div id="screen-trail" class="screen hidden">
       <div class="topbar">
         <div>
           <h1>Expedição do Saber</h1>
@@ -520,7 +555,6 @@
         <div class="breakdown" id="final-breakdown"></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="openRanking()">Ver ranking</button>
-          <button class="btn btn-secondary" onclick="restartGame()">Jogar novamente</button>
         </div>
       </div>
     </div>
@@ -542,7 +576,7 @@
 
 <script>
 /* ========================= DATA ========================= */
-const DOORS = [
+const DEFAULT_DOORS = [
   {
     id: 'mat',
     subject: 'Química',
@@ -701,6 +735,8 @@ const DOORS = [
   }
 ];
 
+let DOORS = DEFAULT_DOORS;
+
 const MOCK_PLAYERS = [
   {name:'André Guilherme', score:210},
   {name:'Marina Souza', score:160},
@@ -714,6 +750,8 @@ const MOCK_PLAYERS = [
 const AVATAR_COLORS = ['#d9b23c','#a6491e','#5f8a3f','#7c6f4f','#c14a4a','#8a6c1c','#4e9a5d'];
 const TIME_PER_QUESTION = 20;
 const POINTS_PER_CORRECT = 10;
+const RANKING_STORAGE_KEY = 'expedicao-saber-ranking-v1';
+const CADASTROS_URL = 'cadastros.json';
 
 /* ========================= STATE ========================= */
 let state = {
@@ -726,6 +764,9 @@ let state = {
   timer:null,
   timeLeft:TIME_PER_QUESTION,
   answered:false,
+  playerName:'',
+  playerBirth:'',
+  rankingEntries:[],
 };
 
 /* ========================= HELPERS ========================= */
@@ -737,6 +778,88 @@ function starsHtml(count, size){
   let h='';
   for(let i=0;i<3;i++){ h += `<span class="${i<count?'on':''}">★</span>`; }
   return h;
+}
+async function loadQuizData(){
+  try {
+    const response = await fetch('quiz-data.json', {cache: 'no-store'});
+    if(!response.ok) throw new Error('Falha ao carregar quiz');
+    const data = await response.json();
+    if(Array.isArray(data.doors) && data.doors.length){
+      DOORS = data.doors;
+    } else if(Array.isArray(data)){
+      DOORS = data;
+    } else {
+      DOORS = DEFAULT_DOORS;
+    }
+  } catch (error) {
+    console.error(error);
+    DOORS = DEFAULT_DOORS;
+  }
+  return DOORS;
+}
+async function loadRankingEntries(){
+  try {
+    const response = await fetch(CADASTROS_URL, {cache: 'no-store'});
+    if(!response.ok) throw new Error('Falha ao carregar cadastros');
+    const data = await response.json();
+    return Array.isArray(data.pessoas) ? data.pessoas : [];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+async function saveRankingEntries(entries){
+  try {
+    await fetch(CADASTROS_URL, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({pessoas: entries})
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+async function saveCurrentResult(){
+  const name = (state.playerName || '').trim();
+  if(!name || !state.playerBirth){ return null; }
+  const entries = await loadRankingEntries();
+  const existingIndex = entries.findIndex(entry => entry.name.toLowerCase() === name.toLowerCase() && entry.birthDate === state.playerBirth);
+  if(existingIndex < 0){
+    state.rankingEntries = entries;
+    return {blocked: true};
+  }
+  const entry = {
+    ...entries[existingIndex],
+    name,
+    birthDate: state.playerBirth,
+    score: state.score,
+    completedAt: new Date().toISOString()
+  };
+  entries[existingIndex] = entry;
+  await saveRankingEntries(entries);
+  state.rankingEntries = entries;
+  return entry;
+}
+async function startGame(){
+  const name = document.getElementById('player-name').value.trim();
+  const birth = document.getElementById('player-birth').value;
+  if(!name || !birth){
+    alert('Informe seu nome e sua data de nascimento para continuar.');
+    return;
+  }
+
+  const entries = await loadRankingEntries();
+  const isRegistered = entries.some(entry => entry.name.toLowerCase() === name.toLowerCase() && entry.birthDate === birth);
+  if(!isRegistered){
+    alert('Seu nome e data de nascimento não estão cadastrados para participar da trilha.');
+    return;
+  }
+
+  state.playerName = name;
+  state.playerBirth = birth;
+  state.rankingEntries = entries;
+  renderTrail();
+  showScreen('screen-trail');
 }
 
 /* ========================= TRAIL RENDER ========================= */
@@ -951,7 +1074,11 @@ function continueFromSummary(){
 }
 
 /* ========================= FINAL ========================= */
-function showFinal(){
+async function showFinal(){
+  const result = await saveCurrentResult();
+  if(result && result.blocked){
+    alert('Seu cadastro não foi encontrado para salvar o resultado.');
+  }
   document.getElementById('final-score').textContent = state.score;
   const breakdown = document.getElementById('final-breakdown');
   breakdown.innerHTML = DOORS.map((door,i)=>{
@@ -965,18 +1092,31 @@ function showFinal(){
 }
 
 /* ========================= RANKING ========================= */
-function openRanking(){
-  const all = MOCK_PLAYERS.map(p=>({...p, me:false}));
-  all.push({name:'Você', score: state.score, me:true});
-  all.sort((a,b)=>b.score-a.score);
+async function openRanking(){
+  const entries = await loadRankingEntries();
+  const currentName = (state.playerName || '').trim();
+  const all = entries.length ? entries : MOCK_PLAYERS.map(p=>({...p, me:false}));
+  const currentEntry = currentName && state.score >= 0 ? {
+    name: currentName,
+    score: state.score,
+    me: true
+  } : null;
 
-  const myPos = all.findIndex(p=>p.me) + 1;
-  document.getElementById('ranking-position').textContent = `Sua posição: #${myPos} de ${all.length}`;
+  if(currentEntry && !all.some(entry => entry.name === currentEntry.name && entry.score === currentEntry.score)){
+    all.push(currentEntry);
+  }
+
+  const ranked = all
+    .map(entry => ({...entry, me: Boolean(entry.me)}))
+    .sort((a,b)=>b.score-a.score);
+
+  const myPos = ranked.findIndex(p=>p.me) + 1;
+  document.getElementById('ranking-position').textContent = currentName ? `Sua posição: #${myPos} de ${ranked.length}` : `Total de registros: ${ranked.length}`;
 
   const list = document.getElementById('ranking-list');
-  list.innerHTML = all.map((p,idx)=>{
+  list.innerHTML = ranked.map((p,idx)=>{
     const pos = idx+1;
-    const initials = p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const initials = (p.name || 'VO').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
     const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
     return `<div class="rank-row ${p.me?'me':''} pos-${pos}">
       <div class="rank-num">${pos}</div>
@@ -994,17 +1134,25 @@ function closeRanking(){
 }
 
 /* ========================= RESTART ========================= */
-function restartGame(){
+async function restartGame(){
   state = {
     score:0, unlockedIndex:0, doorResults:[], activeDoor:null,
     qIndex:0, doorCorrect:0, timer:null, timeLeft:TIME_PER_QUESTION, answered:false,
+    playerName:'', playerBirth:'', rankingEntries:[],
   };
+  state.rankingEntries = await loadRankingEntries();
+  document.getElementById('start-form').reset();
   renderTrail();
-  showScreen('screen-trail');
+  showScreen('screen-start');
 }
 
 /* ========================= INIT ========================= */
-renderTrail();
+(async () => {
+  DOORS = await loadQuizData();
+  state.rankingEntries = await loadRankingEntries();
+  renderTrail();
+  showScreen('screen-start');
+})();
 </script>
 </body>
 </html>

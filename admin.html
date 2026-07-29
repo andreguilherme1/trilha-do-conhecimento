@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel admin</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1c0b;
+      --panel: #16260f;
+      --panel-2: #1d2f13;
+      --gold: #d9b23c;
+      --text: #f3ecd6;
+      --muted: #9ca785;
+      --danger: #e17878;
+      --success: #7ec98c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(217,178,60,.25);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 12px 24px rgba(0,0,0,.25);
+      margin-bottom: 18px;
+    }
+    h1, h2, h3 { margin-top: 0; }
+    .muted { color: var(--muted); }
+    .grid { display: grid; gap: 18px; }
+    .grid.two { grid-template-columns: 1fr 1fr; }
+    label { display: flex; flex-direction: column; gap: 8px; font-weight: 600; }
+    input, textarea, button {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 10px 12px;
+    }
+    input, textarea {
+      background: #f7f1d5;
+      color: #111;
+    }
+    textarea { min-height: 340px; resize: vertical; }
+    button {
+      cursor: pointer;
+      background: var(--gold);
+      color: #241b06;
+      font-weight: 700;
+      border: none;
+    }
+    .btn-secondary { background: transparent; color: var(--text); border: 1px solid rgba(255,255,255,.18); }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .message { margin-top: 10px; font-size: 14px; }
+    .message.ok { color: var(--success); }
+    .message.err { color: var(--danger); }
+    .hidden { display: none !important; }
+    .list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+    .item {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--panel-2);
+    }
+    .pill { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+    .footer-link { margin-top: 12px; display: inline-block; color: var(--gold); }
+    @media (max-width: 760px) {
+      .grid.two { grid-template-columns: 1fr; }
+      body { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="login-card" class="card">
+      <h1>Painel de administração</h1>
+      <p class="muted">Entre com um usuário de teste para editar as perguntas, cadastros e ranking.</p>
+      <form id="login-form">
+        <label>
+          Usuário
+          <input id="login-user" required />
+        </label>
+        <label style="margin-top: 10px;">
+          Senha
+          <input id="login-pass" type="password" required />
+        </label>
+        <div class="actions">
+          <button type="submit">Entrar</button>
+        </div>
+        <div id="login-message" class="message"></div>
+      </form>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+      <div class="card">
+        <h2>Editar perguntas da trilha</h2>
+        <p class="muted">Altere o arquivo JSON usado pela trilha. O formato deve seguir o padrão de portas e perguntas.</p>
+        <form id="quiz-form">
+          <label>
+            JSON da trilha
+            <textarea id="quiz-json" spellcheck="false"></textarea>
+          </label>
+          <div class="actions">
+            <button type="submit">Salvar perguntas</button>
+            <button type="button" id="restore-default" class="btn-secondary">Restaurar padrão</button>
+          </div>
+          <div id="quiz-message" class="message"></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Cadastros e ranking</h2>
+        <p class="muted">Veja os participantes cadastrados e limpe toda a lista para zerar o ranking.</p>
+        <div id="cadastros-list" class="list"></div>
+        <div class="actions">
+          <button id="clear-cadastros" class="btn-secondary">Limpar cadastros e ranking</button>
+        </div>
+        <div id="cadastros-message" class="message"></div>
+      </div>
+
+      <a class="footer-link" href="/">Voltar para a trilha</a>
+    </div>
+  </div>
+
+  <script>
+    const TEST_USER = { username: 'admin', password: 'receba' };
+    const DEFAULT_QUIZ_JSON = JSON.stringify({
+      doors: [
+        {
+          id: 'mat',
+          subject: 'Química',
+          title: 'Laboratório dos Átomos',
+          glyph: '⚛️',
+          questions: [
+            { q: 'Qual é o número atômico do carbono?', options: ['4', '6', '8', '12'], correct: 1 },
+            { q: 'Qual partícula possui carga elétrica negativa?', options: ['Próton', 'Nêutron', 'Elétron', 'Núcleo'], correct: 2 },
+            { q: 'Qual elemento químico possui o símbolo O?', options: ['Ouro', 'Ósmio', 'Oxigênio', 'Oxalato'], correct: 2 },
+            { q: 'O átomo é eletricamente neutro quando:', options: ['Tem mais prótons que elétrons', 'Tem mais elétrons que prótons', 'Possui igual número de prótons e elétrons', 'Não possui nêutrons'], correct: 2 }
+          ]
+        },
+        {
+          id: 'por',
+          subject: 'Química',
+          title: 'Castelo da Tabela Periódica',
+          glyph: '🧪',
+          questions: [
+            { q: 'Qual grupo da Tabela Periódica é conhecido como gases nobres?', options: ['Grupo 1', 'Grupo 2', 'Grupo 17', 'Grupo 18'], correct: 3 },
+            { q: 'O sódio (Na) pertence à família dos:', options: ['Halogênios', 'Metais alcalinos', 'Calcogênios', 'Gases nobres'], correct: 1 },
+            { q: 'Qual elemento é um halogênio?', options: ['Cloro', 'Magnésio', 'Cálcio', 'Hélio'], correct: 0 },
+            { q: 'Qual é o símbolo químico do ferro?', options: ['Fe', 'Fr', 'F', 'Ir'], correct: 0 }
+          ]
+        },
+        {
+          id: 'his',
+          subject: 'Química',
+          title: 'Caverna das Ligações',
+          glyph: '🔗',
+          questions: [
+            { q: 'A ligação entre sódio (Na) e cloro (Cl) é do tipo:', options: ['Metálica', 'Covalente', 'Iônica', 'Dipolo'], correct: 2 },
+            { q: 'Na molécula de água (H₂O), a ligação entre H e O é:', options: ['Iônica', 'Covalente', 'Metálica', 'Nuclear'], correct: 1 },
+            { q: 'As ligações metálicas ocorrem principalmente entre:', options: ['Metais', 'Ametais', 'Gases nobres', 'Hidrogênio e oxigênio'], correct: 0 },
+            { q: 'Qual substância apresenta ligação predominantemente iônica?', options: ['H₂O', 'CO₂', 'NaCl', 'O₂'], correct: 2 }
+          ]
+        },
+        {
+          id: 'geo',
+          subject: 'Química',
+          title: 'Fortaleza das Reações',
+          glyph: '⚗️',
+          questions: [
+            { q: 'A combustão necessita obrigatoriamente de:', options: ['Água', 'Oxigênio', 'Nitrogênio', 'Gás carbônico'], correct: 1 },
+            { q: 'Quando um ferro enferruja, ocorre uma reação de:', options: ['Neutralização', 'Oxidação', 'Fusão', 'Destilação'], correct: 1 },
+            { q: 'Qual é um indício comum de reação química?', options: ['Mudança de estado físico apenas', 'Formação de gás ou mudança de cor', 'Aumento do volume do recipiente', 'Diminuição da massa do átomo'], correct: 1 },
+            { q: 'Em uma reação química, a soma das massas dos reagentes é:', options: ['Maior que a dos produtos', 'Menor que a dos produtos', 'Igual à dos produtos', 'Sempre zero'], correct: 2 }
+          ]
+        },
+        {
+          id: 'cie',
+          subject: 'Química',
+          title: 'Templo da Química',
+          glyph: '🧬',
+          isFinal: true,
+          questions: [
+            { q: 'Qual é o pH aproximado de uma solução neutra a 25°C?', options: ['1', '5', '7', '14'], correct: 2 },
+            { q: 'Qual substância é considerada um ácido?', options: ['NaOH', 'HCl', 'NH₃', 'CaO'], correct: 1 },
+            { q: 'Qual é a fórmula química da água?', options: ['CO₂', 'H₂O', 'NaCl', 'O₂'], correct: 1 },
+            { q: 'Uma base forte muito utilizada em laboratório é:', options: ['H₂SO₄', 'HCl', 'NaOH', 'H₂CO₃'], correct: 2 }
+          ]
+        }
+      ]
+    }, null, 2);
+
+    const loginCard = document.getElementById('login-card');
+    const adminPanel = document.getElementById('admin-panel');
+    const quizJson = document.getElementById('quiz-json');
+    const cadastroList = document.getElementById('cadastros-list');
+
+    function setMessage(element, message, type) {
+      element.textContent = message;
+      element.className = `message ${type || ''}`.trim();
+    }
+
+    async function loadData() {
+      try {
+        const [quizResponse, cadResponse] = await Promise.all([
+          fetch('/quiz-data.json', { cache: 'no-store' }),
+          fetch('/cadastros.json', { cache: 'no-store' })
+        ]);
+        const quizData = await quizResponse.json();
+        const cadData = await cadResponse.json();
+        quizJson.value = JSON.stringify(quizData, null, 2);
+        const entries = Array.isArray(cadData.pessoas) ? cadData.pessoas : [];
+        renderCadastros(entries);
+      } catch (error) {
+        quizJson.value = DEFAULT_QUIZ_JSON;
+        renderCadastros([]);
+      }
+    }
+
+    function renderCadastros(entries) {
+      if (!entries.length) {
+        cadastroList.innerHTML = '<div class="item"><span>Nenhum cadastro no momento.</span></div>';
+        return;
+      }
+      cadastroList.innerHTML = entries.map((entry) => `
+        <div class="item">
+          <div>
+            <strong>${entry.name || 'Sem nome'}</strong>
+            <div class="pill">${entry.birthDate || '—'} • ${entry.score ?? 0} pts</div>
+          </div>
+          <div class="pill">${entry.completedAt ? new Date(entry.completedAt).toLocaleString('pt-BR') : 'Sem registro'}</div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('login-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const user = document.getElementById('login-user').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      const message = document.getElementById('login-message');
+      if (user === TEST_USER.username && pass === TEST_USER.password) {
+        loginCard.classList.add('hidden');
+        adminPanel.classList.remove('hidden');
+        loadData();
+      } else {
+        setMessage(message, 'Usuário ou senha inválidos.', 'err');
+      }
+    });
+
+    document.getElementById('quiz-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const message = document.getElementById('quiz-message');
+      try {
+        const parsed = JSON.parse(quizJson.value);
+        const response = await fetch('/api/admin/save-quiz-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(parsed)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Falha ao salvar');
+        setMessage(message, data.message || 'Perguntas salvas com sucesso.', 'ok');
+      } catch (error) {
+        setMessage(message, error.message || 'JSON inválido.', 'err');
+      }
+    });
+
+    document.getElementById('restore-default').addEventListener('click', () => {
+      quizJson.value = DEFAULT_QUIZ_JSON;
+      setMessage(document.getElementById('quiz-message'), 'Valores padrões restaurados no formulário.', 'ok');
+    });
+
+    document.getElementById('clear-cadastros').addEventListener('click', async () => {
+      const message = document.getElementById('cadastros-message');
+      try {
+        const response = await fetch('/api/admin/clear-cadastros', { method: 'POST' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Falha ao limpar');
+        renderCadastros([]);
+        setMessage(message, data.message || 'Cadastros e ranking limpos.', 'ok');
+      } catch (error) {
+        setMessage(message, error.message || 'Erro ao limpar.', 'err');
+      }
+    });
+  </script>
+</body>
+</html>
